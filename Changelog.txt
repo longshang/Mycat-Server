@@ -5,6 +5,11 @@ Change log
 @since 2017-01-15
 @author little-pan
 
+2017-02-09
+--------------------------------------------------
++ mycat-1.5.1u2-dev.
++ 支持dataNode “$0x”16进制通配符配置，如$0x01-1f。为了适应带有16进制的数据库名。
+
 2017-01-20
 --------------------------------------------------
 + Supports single SQL comment statments such as: 

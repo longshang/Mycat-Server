@@ -229,20 +229,62 @@ public class SplitUtil {
         } else {
             String[] s = split(src, c1, true);
             String[] scope = split(s[1], c2, true);
-            int min = Integer.parseInt(scope[0]);
-            int max = Integer.parseInt(scope[scope.length - 1]);
+            // 支持“$0x”16进制通配符：为了适应带有16进制的数据库名
+            // @since 2017-02-09 pzp
+            final int min, max;
+            final String hexf, pref = s[0];
+            {
+            	final String mins = scope[0], maxs = scope[scope.length - 1];
+            	final boolean lcase;
+            	if((lcase = mins.startsWith("0x")) || mins.startsWith("0X")){
+                	min = Integer.parseInt(mins.substring(2), 16);
+                	max = Integer.parseInt(maxs, 16);
+                	hexf= "%0"+maxs.length()+(lcase ? "x" : "X");
+                }else{
+                	min = Integer.parseInt(mins);
+                	max = Integer.parseInt(maxs);
+                	hexf= null;
+                }
+            }
+            // - Optimize string usage
+            // @since 2017-02-09 pzp
+            final StringBuilder sbuf = new StringBuilder();
             if (c3 == '0') {
-                for (int x = min; x <= max; x++) {
-                    list.add(new StringBuilder(s[0]).append(x).toString());
-                }
+            	if(hexf == null){
+            		for (int x = min; x <= max; x++) {
+            			sbuf.setLength(0);
+                        list.add(sbuf.append(pref).append(x).toString());
+                    }
+            	}else{
+            		for (int x = min; x <= max; x++) {
+            			sbuf.setLength(0);
+                        list.add(sbuf.append(pref).append(String.format(hexf, x)).toString());
+                    }
+            	}
             } else if (c4 == '0') {
-                for (int x = min; x <= max; x++) {
-                    list.add(new StringBuilder(s[0]).append(c3).append(x).toString());
-                }
+            	if(hexf == null){
+            		for (int x = min; x <= max; x++) {
+            			sbuf.setLength(0);
+                        list.add(sbuf.append(pref).append(c3).append(x).toString());
+                    }
+            	}else{
+            		for (int x = min; x <= max; x++) {
+            			sbuf.setLength(0);
+                        list.add(sbuf.append(pref).append(c3).append(String.format(hexf, x)).toString());
+                    }
+            	}
             } else {
-                for (int x = min; x <= max; x++) {
-                    list.add(new StringBuilder(s[0]).append(c3).append(x).append(c4).toString());
-                }
+            	if(hexf == null){
+            		 for (int x = min; x <= max; x++) {
+            			 sbuf.setLength(0);
+                         list.add(sbuf.append(pref).append(c3).append(x).append(c4).toString());
+                     }
+            	}else{
+            		 for (int x = min; x <= max; x++) {
+            			 sbuf.setLength(0);
+                         list.add(sbuf.append(pref).append(c3).append(String.format(hexf, x)).append(c4).toString());
+                     }
+            	}
             }
         }
         return list.toArray(new String[list.size()]);
@@ -277,7 +319,7 @@ public class SplitUtil {
         if (bytes.length <= size)
             return new String[] { string };
         // 分成的条数不确定(整除的情况下也许会多出一条),所以先用list再转化为array
-        List list = new ArrayList();
+        final List<String> list = new ArrayList<>();
         int offset = 0;// 偏移量,也就是截取的字符串的首字节的位置
         int length = 0;// 截取的字符串的长度,可能是size,可能是size-1
         int position = 0;// 可能的截取点,根据具体情况判断是不是在此截取
