@@ -255,13 +255,19 @@ public final class Tracer {
 	
 	final static void trace0(final int traces, 
 			final String tag, final String format, final Object ...args){
-		final StringBuilder buf = acquireBuffer();
+		StringBuilder buf = null;
 		try{
+			// 'acquireBuffer()': moved here for handling OOM.
+			// @since 2017-03-10 pzp
+			buf = acquireBuffer();
 			// tag: optional
 			if(tag != null){
 				buf.append('[').append(tag).append(']').append(' ');
 			}
-			buf.append((args == null) ? format: (String.format(format, args)));
+			// fixbug: no 'args' parameter error when the arg format has a format char, 
+			//by adding 'args.length==0' decision.
+			// @since 2017-03-10 little-pan
+			buf.append((args==null || args.length==0) ? format: (String.format(format, args)));
 			if(traceStack){
 				final Thread curThread = Thread.currentThread();
 				final String thrName   = curThread.getName();
@@ -287,6 +293,10 @@ public final class Tracer {
 				}
 			}
 			LOGGER.debug(buf);
+		}catch(final Throwable cause){
+			// should not have effect on the regular logic when tracing error.
+			// @since 2017-03-10 pzp
+			LOGGER.warn("trace error", cause);
 		}finally{
 			releaseBuffer(buf);
 		}
@@ -300,6 +310,9 @@ public final class Tracer {
 	}
 	
 	private final static void releaseBuffer(final StringBuilder buf){
+		if(buf == null){
+			return;
+		}
 		buf.setLength(0);
 		if(buf.capacity() > maxBuffer){
 			localBuffer.remove();

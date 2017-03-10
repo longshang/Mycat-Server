@@ -182,8 +182,8 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 		try {
 			conn.execute(node, session.getSource(), session.getSource()
 					.isAutocommit());
-		} catch (Exception e1) {
-			executeException(conn, e1);
+		} catch (Exception e) {
+			executeException(conn, e);
 			return;
 		}
 	}
