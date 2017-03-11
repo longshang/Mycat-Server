@@ -694,7 +694,7 @@ public final class ServerParse {
 					/*&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n'
 							|| c4 == '/' || c4 == '#')
 					 -- fixbug: eg. "select* from ... order by id desc" leads to dead-loop! 
-					 -- @since 2017-03-11 pzp */) {
+					 -- @since 2017-03-11 little-pan */) {
 				switch(c4){
 				// 1. blank char
 				case ' ':
