@@ -682,18 +682,38 @@ public final class ServerParse {
 	}
 
 	// SELECT' '
-	static int selectCheck(String stmt, int offset) {
+	static int selectCheck(final String stmt, int offset) {
 		if (stmt.length() > offset + 4) {
-			char c1 = stmt.charAt(++offset);
-			char c2 = stmt.charAt(++offset);
-			char c3 = stmt.charAt(++offset);
-			char c4 = stmt.charAt(++offset);
+			final char c1 = stmt.charAt(++offset);
+			final char c2 = stmt.charAt(++offset);
+			final char c3 = stmt.charAt(++offset);
+			final char c4 = stmt.charAt(++offset);
 			if ((c1 == 'E' || c1 == 'e')
 					&& (c2 == 'C' || c2 == 'c')
 					&& (c3 == 'T' || c3 == 't')
-					&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n'
-							|| c4 == '/' || c4 == '#')) {
-				return (offset << 8) | SELECT;
+					/*&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n'
+							|| c4 == '/' || c4 == '#')
+					 -- fixbug: eg. "select* from ... order by id desc" leads to dead-loop! 
+					 -- @since 2017-03-11 pzp */) {
+				switch(c4){
+				// 1. blank char
+				case ' ':
+				case '\t':
+				case '\r':
+				case '\n':
+				// 2. comment char
+				case '/': // select/*
+				case '#': // select#
+				case '-': // select--
+				// 3. char *
+				case '*': // select*
+				// 4. char (
+				case '(': // select(1)
+					return (offset << 8) | SELECT;
+				default:
+					// ILL select!
+					break;
+				}
 			}
 		}
 		return OTHER;
